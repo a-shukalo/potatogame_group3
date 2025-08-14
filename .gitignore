@@ -1,5 +1,555 @@
-# Ignore Claude/Cursor local settings
-.claude/
-\# Ignore accidental Windows device-name file
-nul
+# =============================================================================
+# Brotato Game Project - Git Ignore File
+# =============================================================================
+# This file prevents temporary, intermediate, and generated files from being
+# committed to the repository. Covers C++, CMake, SDL2, and multi-platform builds.
+
+# =============================================================================
+# Build Directories and Output Files
+# =============================================================================
+
+# CMake build directories
 build/
+builds/
+cmake-build-*/
+out/
+bin/
+lib/
+dist/
+
+# Platform-specific build directories
+build-windows/
+build-macos/
+build-linux/
+build-android/
+build-ios/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CPackConfig.cmake
+CPackSourceConfig.cmake
+install_manifest.txt
+compile_commands.json
+
+# Make files
+Makefile
+*.make
+
+# Executable files
+*.exe
+*.app
+*.apk
+*.ipa
+*.so
+*.dll
+*.dylib
+*.a
+*.lib
+
+# Debug files
+*.pdb
+*.dSYM/
+*.ilk
+*.map
+*.exp
+
+# =============================================================================
+# Compiler and Linker Files
+# =============================================================================
+
+# Object files
+*.o
+*.obj
+*.lo
+*.slo
+*.ko
+*.elf
+
+# Precompiled headers
+*.gch
+*.pch
+
+# Assembly listings
+*.lst
+
+# Dependencies
+*.d
+*.deps
+
+# Coverage files
+*.gcov
+*.gcda
+*.gcno
+
+# =============================================================================
+# Visual Studio / MSBuild Files
+# =============================================================================
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.vcxproj.user
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio 2015/2017 cache/options directory
+.vs/
+
+# MSBuild Binary and Structured Log
+*.binlog
+
+# Visual Studio cache
+ipch/
+*.aps
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
+
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+*.sap
+
+# =============================================================================
+# Xcode Files (macOS)
+# =============================================================================
+
+# Xcode build files
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.moved-aside
+*.xccheckout
+*.xcscmblueprint
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcworkspace/contents.xcworkspacedata
+
+# Xcode derived data
+DerivedData/
+
+# =============================================================================
+# Android Studio / Gradle Files
+# =============================================================================
+
+# Android build output
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Gradle files
+.gradle/
+gradle/
+gradlew
+gradlew.bat
+gradle.properties
+local.properties
+
+# Android Studio files
+.idea/
+.navigation/
+captures/
+*.iml
+*.ipr
+*.iws
+
+# Android NDK
+obj/
+libs/
+jni/libs/
+jni/obj/
+
+# Android keystore files
+*.jks
+*.keystore
+
+# =============================================================================
+# vcpkg Package Manager
+# =============================================================================
+
+# vcpkg installed packages
+vcpkg_installed/
+.vcpkg-root
+vcpkg-export-*/
+
+# vcpkg binary cache
+vcpkg/downloads/
+vcpkg/buildtrees/
+vcpkg/packages/
+
+# =============================================================================
+# IDE and Editor Files
+# =============================================================================
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# CLion
+.idea/
+cmake-build-*/
+
+# Code::Blocks
+*.cbp
+*.depend
+*.layout
+
+# Dev-C++
+*.dev
+
+# QtCreator
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.moc
+*.moc.cpp
+*.qm
+*.prl
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*.swp
+*.swo
+*~
+.*.swp
+.*.swo
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# =============================================================================
+# Operating System Files
+# =============================================================================
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =============================================================================
+# Dependency and Package Managers
+# =============================================================================
+
+# Conan
+conanbuildinfo.*
+conaninfo.txt
+conan.lock
+conandata.yml
+
+# vcpkg (additional)
+.vcpkg-root
+vcpkg.json.user
+
+# Hunter
+_builds/
+_deps/
+
+# CPM
+_deps/
+
+# =============================================================================
+# Game-Specific Files
+# =============================================================================
+
+# Save files and user data
+saves/
+config/
+userdata/
+profiles/
+
+# Generated assets
+generated_assets/
+asset_cache/
+texture_cache/
+
+# Logs and crash dumps
+*.log
+*.dmp
+crash_*.txt
+debug_*.txt
+
+# Performance profiling
+*.prof
+perf.data*
+
+# =============================================================================
+# Testing and Coverage Files
+# =============================================================================
+
+# Google Test
+gtest/
+gmock/
+
+# Coverage reports
+coverage/
+*.coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Unit test results
+test_results/
+TestResults/
+*.trx
+*.xml
+
+# =============================================================================
+# Documentation Generated Files
+# =============================================================================
+
+# Doxygen
+html/
+latex/
+xml/
+man/
+
+# Sphinx documentation
+_build/
+_static/
+_templates/
+
+# =============================================================================
+# Temporary and Backup Files
+# =============================================================================
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*.swo
+*~
+
+# Auto-generated files
+*_generated.*
+*_autogen.*
+
+# Backup directories
+backup/
+backups/
+
+# =============================================================================
+# Mobile Platform Specific
+# =============================================================================
+
+# Android specific (additional)
+.externalNativeBuild/
+.cxx/
+*.ap_
+*.dex
+hs_err_pid*
+
+# iOS specific
+*.ipa
+*.dSYM.zip
+*.dSYM
+timeline.xctimeline
+playground.xcworkspace
+.build/
+
+# =============================================================================
+# CI/CD and Deployment
+# =============================================================================
+
+# Docker
+.dockerignore
+Dockerfile.bak
+
+# GitHub Actions
+.github/workflows/*.yml.bak
+
+# Jenkins
+.jenkins/
+
+# Deployment packages
+*.zip
+*.tar.gz
+*.tar.bz2
+*.7z
+packages/
+dist/
+
+# =============================================================================
+# Asset Processing and Tools
+# =============================================================================
+
+# Texture atlases (generated)
+*.atlas
+*.json.meta
+
+# Audio processing
+*.wav.meta
+*.mp3.meta
+*.ogg.meta
+
+# Sprite processing
+sprites_processed/
+textures_compressed/
+
+# Asset bundles
+*.bundle
+
+# =============================================================================
+# Development Tools
+# =============================================================================
+
+# Memory leak detection
+*.memcheck
+vgcore.*
+callgrind.out.*
+
+# Static analysis
+cppcheck.xml
+*.sarif
+
+# Benchmark results
+benchmark_results/
+*.benchmark
+
+# =============================================================================
+# Local Environment Files
+# =============================================================================
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Local configuration
+config.local.*
+settings.local.*
+
+# Developer specific files
+local_*
+dev_*
+*_local.*
+
+# =============================================================================
+# Third-party Libraries (if vendored)
+# =============================================================================
+
+# Common third-party directories (uncomment if you vendor these)
+# third-party/
+# external/
+# vendor/
+# dependencies/
+
+# SDL2 (if building from source)
+# SDL2/
+# SDL2_image/
+# SDL2_ttf/
+
+# =============================================================================
+# Project Specific Ignores
+# =============================================================================
+
+# Game data files that shouldn't be committed
+player_data/
+statistics/
+analytics/
+
+# Development screenshots
+screenshots/
+screen_*.png
+screen_*.jpg
+
+# Development videos
+recordings/
+*.mp4
+*.avi
+*.mov
+
+# Localization working files
+*.po.backup
+*.pot.backup
+
+# =============================================================================
+# End of .gitignore
+# =============================================================================
+
+# Note: If you need to track a file that matches one of the patterns above,
+# you can force-add it using: git add -f <filename>

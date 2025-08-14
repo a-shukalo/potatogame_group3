@@ -94,27 +94,14 @@ int main(int argc, char* args[]) {
         // Handle events
         SDL_Event e;
         while (SDL_PollEvent(&e) != 0) {
-            if (e.type == SDL_QUIT) {
+            if (e.type == SDL_QUIT || (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)) {
                 running = false;
             }
-            
-            // Pass events to InputManager for processing
-            inputManager->handleSDLEvent(e);
         }
-        
-        // Handle keyboard state for shop (like original game)
-        const Uint8* keyState = SDL_GetKeyboardState(nullptr);
-        gameplayManager->handleShopKeyboard(keyState);
         
         // Update systems manually
         inputManager->update(deltaTime);
         gameplayManager->update(deltaTime);
-        
-        // Check for game over (like original game)
-        if (!gameplayManager->isPlayerAlive()) {
-            std::cout << "Player died - ending game!" << std::endl;
-            running = false; // Exit main loop like original
-        }
         
         // Render
         SDL_SetRenderDrawColor(app.getRenderer(), 120, 110, 100, 255);

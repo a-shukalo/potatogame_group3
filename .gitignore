@@ -2,3 +2,4 @@
 .claude/
 \# Ignore accidental Windows device-name file
 nul
+build/

@@ -225,3 +225,84 @@ Once all items are checked, you should be able to enjoy the game! 🎮
 **Version**: 1.0  
 **Last Updated**: December 2024  
 **Compatible**: Windows 10/11, Visual Studio 2019/2022
+
+---
+
+## 🍎 macOS Setup (vcpkg + Ninja)
+
+### 1) Install Tools
+
+```bash
+brew install cmake ninja
+```
+
+### 2) Install vcpkg
+
+```bash
+git clone https://github.com/microsoft/vcpkg.git "$HOME/vcpkg"
+"$HOME/vcpkg"/bootstrap-vcpkg.sh
+```
+
+Note: you do NOT need to `vcpkg install ...` manually — manifest mode (`vcpkg.json`) will resolve dependencies during CMake configure.
+
+Optional: set default triplet for convenience
+
+```bash
+# On Apple Silicon (arm64)
+export VCPKG_DEFAULT_TRIPLET=arm64-osx
+
+# On Intel (x86_64)
+# export VCPKG_DEFAULT_TRIPLET=x64-osx
+```
+
+### 3) Build with helper script (recommended)
+
+```bash
+cd path/to/potatogame_group3
+chmod +x ./build-macos.sh
+./build-macos.sh                      # native Debug build for your host arch
+./build-macos.sh --config Release     # native Release build
+```
+
+Advanced: universal build (for both arm64 and x86_64)
+
+```bash
+./build-macos.sh --arch universal --config Release
+```
+
+Custom vcpkg location:
+
+```bash
+./build-macos.sh --vcpkg-root "$HOME/dev/vcpkg"
+```
+
+### 4) Build with raw CMake (alternative)
+
+Apple Silicon:
+```bash
+cmake -G Ninja -S . -B build/macos-arm64-ninja \
+  -DCMAKE_TOOLCHAIN_FILE="$HOME/vcpkg/scripts/buildsystems/vcpkg.cmake" \
+  -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
+  -DCMAKE_OSX_ARCHITECTURES=arm64
+cmake --build build/macos-arm64-ninja
+```
+
+Intel:
+```bash
+cmake -G Ninja -S . -B build/macos-x64-ninja \
+  -DCMAKE_TOOLCHAIN_FILE="$HOME/vcpkg/scripts/buildsystems/vcpkg.cmake" \
+  -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
+  -DCMAKE_OSX_ARCHITECTURES=x86_64
+cmake --build build/macos-x64-ninja
+```
+
+Run (from the build dir):
+
+```bash
+./BrotatoGame
+```
+
+Notes:
+- Uses dynamic libraries from vcpkg by default — simplest for development.
+- `find_package(SDL2*_CONFIG REQUIRED)` already works with vcpkg toolchain.
+- If later you need a distributable `.app` or advanced universal packaging, we can extend the build.

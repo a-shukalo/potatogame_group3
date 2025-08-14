@@ -10,6 +10,7 @@
 #include "Material.h"
 #include "Weapon.h"
 #include "Shop.h"
+#include "Menu.h"
 
 // Forward declarations
 class SlimeEnemy;
@@ -19,6 +20,12 @@ enum class EnemySpawnType {
     BASE,
     SLIME,
     PEBBLIN
+};
+
+enum class GameState {
+    MENU,
+    PLAYING,
+    GAME_OVER
 };
 
 struct SpawnIndicator {
@@ -49,6 +56,11 @@ public:
     const Player* getPlayer() const { return player.get(); }
     SDL_Renderer* getRenderer() const { return renderer; }
     
+    // Game state management
+    void showMenu(bool canContinue = false);
+    void startNewGame();
+    void resetGameState();
+    
 private:
     void handleEvents();
     void update(float deltaTime);
@@ -66,6 +78,7 @@ private:
     SDL_Window* window;
     SDL_Renderer* renderer;
     bool running;
+    GameState gameState;
     
     std::unique_ptr<Player> player;
     std::vector<std::unique_ptr<Enemy>> enemies;
@@ -90,6 +103,13 @@ private:
     
     // Shop system
     std::unique_ptr<Shop> shop;
+    
+    // Menu system
+    std::unique_ptr<Menu> mainMenu;
+    
+    // ESC key cooldown for game state (to prevent rapid menu toggling)
+    float escCooldownTimer;
+    static constexpr float ESC_COOLDOWN_DURATION = 0.3f; // 300ms cooldown
     
     // TTF Font system
     TTF_Font* defaultFont;

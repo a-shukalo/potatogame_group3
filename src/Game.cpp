@@ -13,9 +13,9 @@
 #include <map>
 
 Game::Game() : window(nullptr), renderer(nullptr), running(false), 
-               timeSinceLastSpawn(0), score(0), wave(1), mousePos(0, 0),
+               gameState(GameState::MENU), timeSinceLastSpawn(0), score(0), wave(1), mousePos(0, 0),
                waveTimer(0), waveDuration(20.0f), waveActive(true), materialBag(0),
-               defaultFont(nullptr) {
+               escCooldownTimer(0.0f), defaultFont(nullptr) {
 }
 
 Game::~Game() {
@@ -66,6 +66,12 @@ bool Game::init() {
     shop = std::make_unique<Shop>();
     shop->setGame(this);
     shop->loadAssets(renderer);
+    
+    mainMenu = std::make_unique<Menu>();
+    mainMenu->loadAssets(renderer);
+    
+    // Show menu immediately on startup
+    mainMenu->show(false);
     
     // Try to load fonts in order of preference
     const char* fontPaths[] = {
@@ -125,25 +131,86 @@ void Game::handleEvents() {
     
     const Uint8* keyState = SDL_GetKeyboardState(nullptr);
     
-    // Handle shop input if shop is active
-    if (shop->isShopActive()) {
-        shop->handleInput(keyState, *player);
+    if (gameState == GameState::MENU) {
+        // Handle menu input including option selection
+        // Pass ESC availability based on global cooldown
+        bool escAvailable = (escCooldownTimer <= 0.0f);
+        bool escWasProcessed = mainMenu->handleInput(keyState, escAvailable);
         
-        // Handle mouse input for shop
+        // Start cooldown only if ESC was actually processed by the menu
+        if (escWasProcessed) {
+            escCooldownTimer = ESC_COOLDOWN_DURATION;
+        }
+        
+        // Handle mouse input for menu
         Uint32 mouseState = SDL_GetMouseState(&mouseX, &mouseY);
         bool mousePressed = (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0;
-        shop->handleMouseInput(mouseX, mouseY, mousePressed, *player);
-    } else {
-        player->handleInput(keyState);
+        mainMenu->handleMouseInput(mouseX, mouseY, mousePressed);
         
-        // Update player's shoot direction to point towards mouse
-        player->updateShootDirection(mousePos);
+        // Check if an option was selected
+        if (mainMenu->isOptionSelected()) {
+            MenuOption selectedOption = mainMenu->getSelectedOption();
+            mainMenu->resetSelection();
+            
+            switch (selectedOption) {
+                case MenuOption::CONTINUE:
+                    gameState = GameState::PLAYING;
+                    mainMenu->hide();
+                    break;
+                case MenuOption::NEW_GAME:
+                    startNewGame();
+                    break;
+                case MenuOption::EXIT:
+                    running = false;
+                    break;
+            }
+        }
+    } else if (gameState == GameState::PLAYING) {
+        // Check for ESC key to show menu (with cooldown to prevent rapid toggling)
+        if (keyState[SDL_SCANCODE_ESCAPE] && escCooldownTimer <= 0.0f) {
+            escCooldownTimer = ESC_COOLDOWN_DURATION;
+            showMenu(true); // Can continue since game is in progress
+        }
+        
+        // Handle shop input if shop is active
+        if (shop->isShopActive()) {
+            shop->handleInput(keyState, *player);
+            
+            // Handle mouse input for shop
+            Uint32 mouseState = SDL_GetMouseState(&mouseX, &mouseY);
+            bool mousePressed = (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) != 0;
+            shop->handleMouseInput(mouseX, mouseY, mousePressed, *player);
+        } else {
+            player->handleInput(keyState);
+            
+            // Update player's shoot direction to point towards mouse
+            player->updateShootDirection(mousePos);
+        }
     }
 }
 
 void Game::update(float deltaTime) {
+    // Update ESC cooldown timer for all game states
+    if (escCooldownTimer > 0.0f) {
+        escCooldownTimer -= deltaTime;
+        if (escCooldownTimer < 0.0f) {
+            escCooldownTimer = 0.0f;
+        }
+    }
+    
+    if (gameState == GameState::MENU) {
+        mainMenu->update(deltaTime);
+        return;
+    }
+    
+    if (gameState != GameState::PLAYING) {
+        return;
+    }
+    
+    // Check for game over condition
     if (player->getHealth() <= 0) {
-        running = false;
+        gameState = GameState::GAME_OVER;
+        showMenu(false); // Cannot continue after game over
         return;
     }
     
@@ -309,32 +376,39 @@ void Game::render() {
     SDL_SetRenderDrawColor(renderer, 120, 110, 100, 255); // Light brown/tan background for better visibility
     SDL_RenderClear(renderer);
     
-    player->render(renderer);
-    player->renderWeapons(renderer);
-    
-    for (auto& bullet : bullets) {
-        bullet->render(renderer);
-    }
-    
-    for (auto& enemy : enemies) {
-        enemy->render(renderer);
-    }
+    if (gameState == GameState::PLAYING) {
+        player->render(renderer);
+        player->renderWeapons(renderer);
+        
+        for (auto& bullet : bullets) {
+            bullet->render(renderer);
+        }
+        
+        for (auto& enemy : enemies) {
+            enemy->render(renderer);
+        }
 
-    // Spawn indicators on top of background but beneath UI
-    renderSpawnIndicators();
-    
-    for (auto& orb : experienceOrbs) {
-        orb->render(renderer);
+        // Spawn indicators on top of background but beneath UI
+        renderSpawnIndicators();
+        
+        for (auto& orb : experienceOrbs) {
+            orb->render(renderer);
+        }
+        
+        for (auto& material : materials) {
+            material->render(renderer);
+        }
+        
+        renderUI();
+        
+        // Render shop on top if active
+        shop->render(renderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     }
     
-    for (auto& material : materials) {
-        material->render(renderer);
+    // Render menu on top of everything if active
+    if (gameState == GameState::MENU || gameState == GameState::GAME_OVER) {
+        mainMenu->render(renderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     }
-    
-    renderUI();
-    
-    // Render shop on top if active
-    shop->render(renderer, WINDOW_WIDTH, WINDOW_HEIGHT);
     
     SDL_RenderPresent(renderer);
 }
@@ -799,4 +873,43 @@ void Game::cleanup() {
     TTF_Quit();
     IMG_Quit();
     SDL_Quit();
+}
+
+void Game::showMenu(bool canContinue) {
+    gameState = GameState::MENU;
+    mainMenu->show(canContinue);
+}
+
+void Game::startNewGame() {
+    resetGameState();
+    gameState = GameState::PLAYING;
+    mainMenu->hide();
+}
+
+void Game::resetGameState() {
+    // Reset player state
+    player = std::make_unique<Player>(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+    player->initialize(renderer);
+    player->initializeWeapons(renderer);
+    
+    // Clear all game entities
+    enemies.clear();
+    bullets.clear();
+    spawnIndicators.clear();
+    experienceOrbs.clear();
+    materials.clear();
+    
+    // Reset game variables
+    timeSinceLastSpawn = 0;
+    score = 0;
+    wave = 1;
+    waveTimer = 0;
+    waveDuration = 20.0f;
+    waveActive = true;
+    materialBag = 0;
+    
+    // Reset shop state
+    shop->closeShop();
+    
+    std::cout << "Game reset - starting new game" << std::endl;
 }

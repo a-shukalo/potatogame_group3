@@ -553,3 +553,4 @@ recordings/
 
 # Note: If you need to track a file that matches one of the patterns above,
 # you can force-add it using: git add -f <filename>
+build

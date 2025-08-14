@@ -195,12 +195,31 @@ potatogame/
 ## 🚀 Development Notes
 
 ### Code Structure
-- **Game.cpp/h**: Main game loop, rendering, and state management
-- **Player.cpp/h**: Player character, stats, and progression system
-- **Enemy.cpp/h**: Enemy AI, sprite animation, and behavior
-- **Bullet.cpp/h**: Projectile physics and collision detection
-- **ExperienceOrb.cpp/h**: Experience collection system
-- **Vector2.cpp/h**: 2D vector math utilities
+
+**New Modular Architecture:**
+```
+src/
+├── Core/           # Engine foundation & service management
+│   ├── Engine/     # Application framework, service locator
+│   ├── Events/     # Event system for decoupled communication  
+│   └── Math/       # Vector math utilities
+├── Rendering/      # Graphics & rendering systems
+│   └── Renderer/   # SDL2 renderer implementation
+├── Input/          # Input handling & event processing
+│   └── InputSystem/# Mouse & keyboard input management
+├── Gameplay/       # Game logic & ECS systems
+│   ├── Components/ # Data components (Transform, Health, etc.)
+│   ├── Entities/   # Entity manager for ECS
+│   ├── Systems/    # Game logic systems (Movement, Combat, etc.)
+│   └── World/      # Gameplay orchestration
+├── Content/        # Game data & content
+│   └── Weapons/    # Weapon factory & configuration
+└── main.cpp        # Application entry point
+```
+
+**Legacy Code (preserved):**
+- **old_src/**: Original monolithic implementation
+- **original_game/**: Reference implementation
 
 ### Adding Features
 - Character stats are defined in `PlayerStats` struct

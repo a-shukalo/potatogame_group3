@@ -14,6 +14,8 @@ std::string ShopItem::getWeaponName(WeaponType wType, WeaponTier wTier) {
     switch (wType) {
         case WeaponType::PISTOL: baseName = "Pistol"; break;
         case WeaponType::SMG: baseName = "SMG"; break;
+        case WeaponType::SHOTGUN: baseName = "Shotgun"; break;
+        case WeaponType::MELEE_STICK: baseName = "Melee Stick"; break;
     }
     
     std::string tierName;
@@ -33,6 +35,10 @@ std::string ShopItem::getWeaponDescription(WeaponType wType, WeaponTier wTier) {
             return "Pierces 1 enemy, -50% damage to 2nd";
         case WeaponType::SMG:
             return "Fast fire rate, inaccurate shots";
+        case WeaponType::SHOTGUN:
+            return "Fires 3 pellets with spread";
+        case WeaponType::MELEE_STICK:
+            return "Melee weapon with knockback";
     }
     return "";
 }
@@ -58,6 +64,7 @@ void Shop::loadAssets(SDL_Renderer* renderer) {
     texReroll = loadTexture("assets/ui/reroll.png", renderer);
     texWeaponPistol = loadTexture("assets/weapons/pistol.png", renderer);
     texWeaponSMG = loadTexture("assets/weapons/smg.png", renderer);
+    texWeaponShotgun = loadTexture("assets/weapons/shotgun.png", renderer);
 }
 
 void Shop::unloadAssets() {
@@ -73,6 +80,7 @@ void Shop::unloadAssets() {
     destroyIf(texReroll);
     destroyIf(texWeaponPistol);
     destroyIf(texWeaponSMG);
+    destroyIf(texWeaponShotgun);
 }
 
 void Shop::generateItems(int waveNumber, int playerLuck) {
@@ -81,25 +89,58 @@ void Shop::generateItems(int waveNumber, int playerLuck) {
     static std::random_device rd;
     static std::mt19937 gen(rd());
     
-    // Generate 4 random items
-    for (int i = 0; i < MAX_SHOP_ITEMS; i++) {
-        // Choose weapon type
-        std::uniform_int_distribution<int> weaponDist(0, 1);
-        WeaponType weaponType = (weaponDist(gen) == 0) ? WeaponType::PISTOL : WeaponType::SMG;
+    // Special case: guarantee shotgun after wave 1
+    if (waveNumber == 1) {
+        // First item is guaranteed shotgun T1
+        int shotgunPrice = calculateItemPrice(WeaponType::SHOTGUN, WeaponTier::TIER_1, waveNumber);
+        items.emplace_back(WeaponType::SHOTGUN, WeaponTier::TIER_1, shotgunPrice);
         
-        // Choose tier based on wave number (Brotato tier restrictions)
-        std::vector<WeaponTier> availableTiers;
-        availableTiers.push_back(WeaponTier::TIER_1);
-        
-        if (waveNumber >= 2) availableTiers.push_back(WeaponTier::TIER_2);
-        if (waveNumber >= 4) availableTiers.push_back(WeaponTier::TIER_3);
-        if (waveNumber >= 8) availableTiers.push_back(WeaponTier::TIER_4);
-        
-        std::uniform_int_distribution<int> tierDist(0, availableTiers.size() - 1);
-        WeaponTier tier = availableTiers[tierDist(gen)];
-        
-        int price = calculateItemPrice(weaponType, tier, waveNumber);
-        items.emplace_back(weaponType, tier, price);
+        // Generate 3 more random items
+        for (int i = 1; i < MAX_SHOP_ITEMS; i++) {
+            // Choose weapon type randomly (all types available)
+            std::uniform_int_distribution<int> weaponDist(0, 2);
+            WeaponType weaponType;
+            switch (weaponDist(gen)) {
+                case 0: weaponType = WeaponType::PISTOL; break;
+                case 1: weaponType = WeaponType::SMG; break;
+                case 2: weaponType = WeaponType::SHOTGUN; break;
+                default: weaponType = WeaponType::PISTOL; break;
+            }
+            
+            // Only T1 available after wave 1
+            WeaponTier tier = WeaponTier::TIER_1;
+            
+            int price = calculateItemPrice(weaponType, tier, waveNumber);
+            items.emplace_back(weaponType, tier, price);
+        }
+    }
+    else {
+        // Normal random generation for other waves
+        for (int i = 0; i < MAX_SHOP_ITEMS; i++) {
+            // Choose weapon type (now includes shotgun)
+            std::uniform_int_distribution<int> weaponDist(0, 2);
+            WeaponType weaponType;
+            switch (weaponDist(gen)) {
+                case 0: weaponType = WeaponType::PISTOL; break;
+                case 1: weaponType = WeaponType::SMG; break;
+                case 2: weaponType = WeaponType::SHOTGUN; break;
+                default: weaponType = WeaponType::PISTOL; break;
+            }
+            
+            // Choose tier based on wave number (Brotato tier restrictions)
+            std::vector<WeaponTier> availableTiers;
+            availableTiers.push_back(WeaponTier::TIER_1);
+            
+            if (waveNumber >= 2) availableTiers.push_back(WeaponTier::TIER_2);
+            if (waveNumber >= 4) availableTiers.push_back(WeaponTier::TIER_3);
+            if (waveNumber >= 8) availableTiers.push_back(WeaponTier::TIER_4);
+            
+            std::uniform_int_distribution<int> tierDist(0, availableTiers.size() - 1);
+            WeaponTier tier = availableTiers[tierDist(gen)];
+            
+            int price = calculateItemPrice(weaponType, tier, waveNumber);
+            items.emplace_back(weaponType, tier, price);
+        }
     }
 }
 
@@ -212,6 +253,8 @@ void Shop::render(SDL_Renderer* renderer, int windowWidth, int windowHeight) {
                     switch (owned[i]->getType()) {
                         case WeaponType::PISTOL: icon = texWeaponPistol; break;
                         case WeaponType::SMG: icon = texWeaponSMG; break;
+                        case WeaponType::SHOTGUN: icon = texWeaponShotgun; break;
+                        case WeaponType::MELEE_STICK: icon = nullptr; break;
                     }
                     if (icon) {
                         SDL_Rect ir = {cx + 8, cy + 8, wSlotSize - 16, wSlotSize - 16};
@@ -289,6 +332,8 @@ void Shop::renderShopItem(SDL_Renderer* renderer, const ShopItem& item, int x, i
     switch (item.weaponType) {
         case WeaponType::PISTOL: icon = texWeaponPistol; break;
         case WeaponType::SMG: icon = texWeaponSMG; break;
+        case WeaponType::SHOTGUN: icon = texWeaponShotgun; break;
+        case WeaponType::MELEE_STICK: icon = nullptr; break; // No icon for melee yet
     }
     if (icon) {
         SDL_Rect ir = {x + width/2 - 24, y + 10, 48, 48};
@@ -407,6 +452,8 @@ void Shop::renderCharacterStats(SDL_Renderer* renderer, int x, int y, int width,
         switch (weapons[i]->getType()) {
             case WeaponType::PISTOL: weaponText += "Pistol"; break;
             case WeaponType::SMG: weaponText += "SMG"; break;
+            case WeaponType::SHOTGUN: weaponText += "Shotgun"; break;
+            case WeaponType::MELEE_STICK: weaponText += "Melee Stick"; break;
         }
         
         // Add tier info

@@ -11,7 +11,8 @@ class Player;
 enum class WeaponType {
     PISTOL,
     SMG,
-    MELEE_STICK
+    MELEE_STICK,
+    SHOTGUN
 };
 
 enum class WeaponTier {
@@ -79,6 +80,7 @@ protected:
     void initializePistolStats();
     void initializeSMGStats();
     void initializeMeleeStickStats();
+    void initializeShotgunStats();
     
     WeaponType type;
     WeaponTier tier;

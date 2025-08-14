@@ -11,6 +11,8 @@ A Brotato-inspired top-down survival shooter game built with C++ and SDL2.
 - **Brotato-Style UI**: Health bar, level display, materials counter, and countdown timer
 - **Materials System**: Earn materials by killing enemies
 - **Character Stats**: Speed, damage, pickup range, armor, health regen, and more
+- **Main Menu System**: Navigate with keyboard/mouse, ESC to pause during gameplay
+- **Shop System**: Wave-end purchasing interface with material-based economy
 
 ## 🛠️ Prerequisites
 
@@ -66,6 +68,8 @@ Your project should look like this:
 potatogame/
 ├── CMakeLists.txt
 ├── README.md
+├── vcpkg.json
+├── build-macos.sh
 ├── src/
 │   ├── main.cpp
 │   ├── Game.cpp
@@ -74,12 +78,31 @@ potatogame/
 │   ├── Player.h
 │   ├── Enemy.cpp
 │   ├── Enemy.h
+│   ├── SlimeEnemy.cpp
+│   ├── SlimeEnemy.h
+│   ├── PebblinEnemy.cpp
+│   ├── PebblinEnemy.h
 │   ├── Bullet.cpp
 │   ├── Bullet.h
 │   ├── Vector2.cpp
 │   ├── Vector2.h
 │   ├── ExperienceOrb.cpp
-│   └── ExperienceOrb.h
+│   ├── ExperienceOrb.h
+│   ├── Material.cpp
+│   ├── Material.h
+│   ├── Weapon.cpp
+│   ├── Weapon.h
+│   ├── Shop.cpp
+│   ├── Shop.h
+│   ├── Menu.cpp
+│   └── Menu.h
+├── assets/
+│   ├── fonts/
+│   │   └── default.ttf
+│   ├── character/
+│   ├── enemies/
+│   ├── weapons/
+│   └── ui/
 └── monsters/
     └── landmonster/
         └── Transparent PNG/
@@ -121,13 +144,19 @@ potatogame/
 - **Movement**: WASD or Arrow Keys
 - **Aiming**: Move your mouse cursor
 - **Shooting**: Spacebar (hold for continuous fire)
+- **Menu Navigation**: Arrow Keys + Enter, or mouse click
+- **Pause Game**: ESC key (during gameplay)
+- **Shop**: Automatically opens at end of each wave
 
 ### Gameplay
-1. **Survive the Waves**: Each wave lasts 20-60 seconds
-2. **Kill Enemies**: Shoot the blue monsters that spawn from screen edges
-3. **Collect Experience**: Walk over green glowing orbs to gain XP
-4. **Level Up**: Automatically gain stats when you have enough XP
-5. **Earn Materials**: Get materials for each enemy killed
+1. **Start from Menu**: Use main menu to begin new game
+2. **Survive the Waves**: Each wave lasts 20-60 seconds
+3. **Kill Enemies**: Shoot the blue monsters that spawn from screen edges
+4. **Collect Experience**: Walk over green glowing orbs to gain XP
+5. **Level Up**: Automatically gain stats when you have enough XP
+6. **Earn Materials**: Get materials for each enemy killed
+7. **Shop Between Waves**: Purchase weapons and upgrades with materials
+8. **Pause Anytime**: Press ESC to pause and access menu options
 
 ### UI Elements
 - **Top-Left Red Bar**: Your health (X / Y format)
@@ -207,16 +236,20 @@ src/
 ## 📋 System Requirements
 
 ### Minimum Requirements
-- **OS**: Windows 10/11
+- **OS**: Windows 10/11 or macOS 12.0+
 - **CPU**: Any modern CPU (game is not CPU-intensive)
 - **RAM**: 100MB available memory
 - **Graphics**: Any GPU with basic 2D acceleration
 - **Storage**: ~50MB for game files and dependencies
 
 ### Recommended
-- **Resolution**: 1024x768 or higher
-- **Mouse**: For precise aiming
+- **Resolution**: 1024x768 or higher (works great on Retina displays)
+- **Mouse**: For precise aiming and menu navigation
 - **Audio**: Speakers/headphones (if audio is added later)
+
+### Platform-Specific
+- **Windows**: Visual Studio 2019/2022 with C++ tools
+- **macOS**: Xcode Command Line Tools, works on both Intel and Apple Silicon
 
 ## 📞 Support
 
@@ -229,95 +262,153 @@ If you encounter issues:
 
 ## 🎯 Quick Start Checklist
 
+### Windows
 - [ ] Visual Studio installed with C++ tools
 - [ ] vcpkg installed and integrated
 - [ ] SDL2 and SDL2_image installed via vcpkg
 - [ ] Project files downloaded/cloned
-- [ ] Monster sprite assets in correct location
 - [ ] Built successfully with CMake
 - [ ] Game runs and displays UI correctly
+
+### macOS
+- [ ] Xcode Command Line Tools installed
+- [ ] Homebrew, CMake, and Ninja installed
+- [ ] vcpkg cloned and bootstrapped
+- [ ] Project files downloaded/cloned
+- [ ] Built successfully with `./build-macos.sh`
+- [ ] Game runs and displays UI correctly
+
+### Both Platforms
+- [ ] Monster sprite assets in correct location
+- [ ] Main menu appears on startup
+- [ ] Menu navigation works (keyboard/mouse)
+- [ ] ESC key pauses game correctly
+- [ ] Shop opens at end of waves
 
 Once all items are checked, you should be able to enjoy the game! 🎮
 
 ---
 
-**Version**: 1.0  
+**Version**: 1.1  
 **Last Updated**: December 2024  
-**Compatible**: Windows 10/11, Visual Studio 2019/2022
+**Compatible**: Windows 10/11 (Visual Studio 2019/2022), macOS 12.0+ (Intel & Apple Silicon)
+
+### Recent Updates (v1.1)
+- ✅ **Main Menu System**: Full navigation with keyboard/mouse support
+- ✅ **macOS Support**: Native builds for both Intel and Apple Silicon
+- ✅ **Enhanced Controls**: ESC pause functionality, improved mouse handling
+- ✅ **Shop System**: Wave-end purchasing with materials
+- ✅ **Multiple Enemy Types**: Slime (ranged) and Pebblin (melee) enemies
+- ✅ **Cross-Platform Assets**: TTF font support with fallback rendering
 
 ---
 
-## 🍎 macOS Setup (vcpkg + Ninja)
+## 🍎 macOS Setup Instructions
 
-### 1) Install Tools
+### Prerequisites
+
+1. **Xcode Command Line Tools** (for compiler and build tools)
+2. **Homebrew** (package manager)
+3. **Git** (for version control)
+
+### Step 1: Install Required Tools
 
 ```bash
+# Install Homebrew (if you don't have it)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install build tools
 brew install cmake ninja
 ```
 
-### 2) Install vcpkg
+### Step 2: Install vcpkg Package Manager
 
 ```bash
+# Clone vcpkg to your home directory
 git clone https://github.com/microsoft/vcpkg.git "$HOME/vcpkg"
+
+# Bootstrap vcpkg
 "$HOME/vcpkg"/bootstrap-vcpkg.sh
 ```
 
-Note: you do NOT need to `vcpkg install ...` manually — manifest mode (`vcpkg.json`) will resolve dependencies during CMake configure.
+**Note**: You do NOT need to install SDL2 manually — the project uses manifest mode (`vcpkg.json`) which automatically resolves dependencies during build.
 
-Optional: set default triplet for convenience
-
+**Optional**: Set default triplet for convenience:
 ```bash
-# On Apple Silicon (arm64)
+# Add to your shell profile (~/.zshrc or ~/.bash_profile)
+
+# On Apple Silicon (M1/M2/M3)
 export VCPKG_DEFAULT_TRIPLET=arm64-osx
 
-# On Intel (x86_64)
+# On Intel Mac
 # export VCPKG_DEFAULT_TRIPLET=x64-osx
 ```
 
-### 3) Build with helper script (recommended)
+### Step 3: Clone/Download the Game
 
 ```bash
-cd path/to/potatogame_group3
+# Clone the repository
+git clone [your-repository-url] potatogame_group3
+cd potatogame_group3
+```
+
+### Step 4: Build the Game (Recommended Method)
+
+Use the provided build script for easy compilation:
+
+```bash
+# Make the script executable
 chmod +x ./build-macos.sh
-./build-macos.sh                      # native Debug build for your host arch
-./build-macos.sh --config Release     # native Release build
+
+# Build for Debug (default)
+./build-macos.sh
+
+# Build for Release (optimized)
+./build-macos.sh --config Release
 ```
 
-Advanced: universal build (for both arm64 and x86_64)
-
+**Advanced Options:**
 ```bash
+# Universal build (both arm64 and x86_64)
 ./build-macos.sh --arch universal --config Release
+
+# Custom vcpkg location
+./build-macos.sh --vcpkg-root "/path/to/your/vcpkg"
 ```
 
-Custom vcpkg location:
+### Step 5: Build with Raw CMake (Alternative)
 
-```bash
-./build-macos.sh --vcpkg-root "$HOME/dev/vcpkg"
-```
+If you prefer manual CMake setup:
 
-### 4) Build with raw CMake (alternative)
-
-Apple Silicon:
+**For Apple Silicon (M1/M2/M3):**
 ```bash
 cmake -G Ninja -S . -B build/macos-arm64-ninja \
   -DCMAKE_TOOLCHAIN_FILE="$HOME/vcpkg/scripts/buildsystems/vcpkg.cmake" \
   -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
-  -DCMAKE_OSX_ARCHITECTURES=arm64
+  -DCMAKE_OSX_ARCHITECTURES=arm64 \
+  -DCMAKE_BUILD_TYPE=Debug
+
 cmake --build build/macos-arm64-ninja
 ```
 
-Intel:
+**For Intel Mac:**
 ```bash
 cmake -G Ninja -S . -B build/macos-x64-ninja \
   -DCMAKE_TOOLCHAIN_FILE="$HOME/vcpkg/scripts/buildsystems/vcpkg.cmake" \
   -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
-  -DCMAKE_OSX_ARCHITECTURES=x86_64
+  -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+  -DCMAKE_BUILD_TYPE=Debug
+
 cmake --build build/macos-x64-ninja
 ```
 
-Run (from the build dir):
+### Step 6: Run the Game
 
 ```bash
+# Navigate to the build directory
+cd build/macos-arm64-ninja  # or macos-x64-ninja for Intel
+
+# Run the game
 ./BrotatoGame
 ```
 

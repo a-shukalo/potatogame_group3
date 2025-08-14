@@ -22,6 +22,9 @@ Weapon::Weapon(WeaponType weaponType, WeaponTier weaponTier)
         case WeaponType::MELEE_STICK:
             initializeMeleeStickStats();
             break;
+        case WeaponType::SHOTGUN:
+            initializeShotgunStats();
+            break;
     }
 }
 
@@ -60,6 +63,19 @@ void Weapon::loadWeaponTexture(SDL_Renderer* renderer) {
             break;
         case WeaponType::MELEE_STICK:
             texturePath = "assets/weapons/brickonstick.png";
+            break;
+        case WeaponType::SHOTGUN:
+            // Use different shotgun sprites based on tier
+            switch (tier) {
+                case WeaponTier::TIER_1:
+                case WeaponTier::TIER_2:
+                    texturePath = "assets/weapons/shotgun.png";
+                    break;
+                case WeaponTier::TIER_3:
+                case WeaponTier::TIER_4:
+                    texturePath = "assets/weapons/shotgun2.png";
+                    break;
+            }
             break;
         default:
             texturePath = "assets/weapons/pistol.png";
@@ -167,6 +183,37 @@ void Weapon::initializeMeleeStickStats() {
     stats.knockback = 25; // Strong knockback
     stats.rangedDamageScaling = 0.0f; // No ranged scaling
     stats.meleeDamageScaling = 1.0f; // Scales with melee damage
+}
+
+void Weapon::initializeShotgunStats() {
+    // Shotgun stats based on tier - fires 3 pellets per shot
+    switch (tier) {
+        case WeaponTier::TIER_1:
+            stats.baseDamage = 8; // 8 x 3 pellets = 24 total damage
+            stats.attackSpeed = 1.0f;
+            stats.critChance = 0.03f;
+            break;
+        case WeaponTier::TIER_2:
+            stats.baseDamage = 12; // 12 x 3 pellets = 36 total damage
+            stats.attackSpeed = 0.95f;
+            stats.critChance = 0.05f;
+            break;
+        case WeaponTier::TIER_3:
+            stats.baseDamage = 18; // 18 x 3 pellets = 54 total damage
+            stats.attackSpeed = 0.9f;
+            stats.critChance = 0.08f;
+            break;
+        case WeaponTier::TIER_4:
+            stats.baseDamage = 28; // 28 x 3 pellets = 84 total damage
+            stats.attackSpeed = 0.8f;
+            stats.critChance = 0.12f;
+            break;
+    }
+    
+    stats.range = 300; // Shorter range than other ranged weapons
+    stats.critMultiplier = 2.2f; // Slightly higher crit multiplier
+    stats.knockback = 20; // Good knockback
+    stats.rangedDamageScaling = 1.0f;
 }
 
 void Weapon::update(float deltaTime, const Vector2& weaponPos, 
@@ -285,6 +332,33 @@ void Weapon::fire(const Vector2& weaponPos, const Vector2& direction,
         // Set attack timer for melee weapons (reuse muzzle flash timer)
         // This indicates the weapon is actively attacking
         muzzleFlashTimer = 0.3f; // Melee attack duration
+        return;
+    }
+    
+    // Shotgun fires multiple pellets with spread
+    if (type == WeaponType::SHOTGUN) {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        
+        int finalDamage = calculateDamage(player);
+        
+        // Check for critical hit (applies to all pellets)
+        std::uniform_real_distribution<float> critRoll(0.0f, 1.0f);
+        if (critRoll(gen) < stats.critChance) {
+            finalDamage = (int)(finalDamage * stats.critMultiplier);
+        }
+        
+        // Fire 3 pellets with 30-degree spread
+        float baseAngle = atan2(direction.y, direction.x);
+        float spreadAngle = 30.0f * (3.14159f / 180.0f); // Convert to radians
+        
+        for (int i = 0; i < 3; i++) {
+            // Calculate spread: -15°, 0°, +15° from base angle
+            float pelletAngle = baseAngle + (spreadAngle * (i - 1) / 2.0f);
+            Vector2 pelletDirection(cos(pelletAngle), sin(pelletAngle));
+            
+            bullets.push_back(std::make_unique<Bullet>(weaponPos, pelletDirection, finalDamage, stats.range, 400.0f, BulletType::PISTOL));
+        }
         return;
     }
     

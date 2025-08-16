@@ -3,6 +3,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <vector>
 #include <memory>
+#include <map>
 #include "Player.h"
 #include "Enemy.h"
 #include "Bullet.h"
@@ -15,11 +16,13 @@
 // Forward declarations
 class SlimeEnemy;
 class PebblinEnemy;
+class BossEnemy;
 
 enum class EnemySpawnType {
     BASE,
     SLIME,
-    PEBBLIN
+    PEBBLIN,
+    BOSS
 };
 
 enum class GameState {
@@ -74,6 +77,7 @@ private:
     void updateMaterialCollection();
     float getMaterialDropChance() const;
     void renderUI();
+    void clearWaveEntities();
     
     SDL_Window* window;
     SDL_Renderer* renderer;
@@ -116,6 +120,15 @@ private:
     
     // Telegraph duration for spawn indicators (seconds)
     float spawnTelegraphSeconds = 2.0f;
+    
+    // Boss system
+    bool bossSpawnedThisWave;
+    std::map<int, bool> bossWaves;  // wave number -> boss enabled
+    
+    void initializeBossWaves();
+    bool shouldSpawnBoss() const;
+    Vector2 getBossSpawnPosition() const;
+    bool isBossDefeated() const;
     
     static const int WINDOW_WIDTH = 1920;
     static const int WINDOW_HEIGHT = 1080;

@@ -7,7 +7,7 @@
 
 Enemy::Enemy(Vector2 pos, SDL_Renderer* renderer) 
     : position(pos), velocity(0, 0), radius(30), speed(80), 
-      health(1), damage(10), alive(true), state(EnemyState::IDLE),
+      health(10), damage(10), alive(true), state(EnemyState::IDLE),
       animationTimer(0.0f), hitTimer(0.0f), currentFrame(0),
       idleFrame1(nullptr), idleFrame2(nullptr), hitFrame(nullptr),
       spriteWidth(64), spriteHeight(64) {

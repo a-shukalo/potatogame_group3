@@ -29,7 +29,19 @@ public:
         hitTimer = 0.0f; 
     }
     
+    virtual void takeDamage(int damage) {
+        health -= damage;
+        if (health <= 0) {
+            health = 0;
+            alive = false;
+        }
+        hit(); // Show hit animation
+    }
+    
     int getDamage() const { return damage; }
+    int getHealth() const { return health; }
+
+    virtual bool isBoss() const { return false; }
     
 private:
     void loadSprites(SDL_Renderer* renderer);

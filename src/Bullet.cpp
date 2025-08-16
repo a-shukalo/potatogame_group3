@@ -2,8 +2,24 @@
 
 Bullet::Bullet(Vector2 pos, Vector2 dir, int dmg, float range, float speed, BulletType type, bool enemyOwnedFlag) 
     : position(pos), startPosition(pos), direction(dir.normalized()), 
-      speed(speed), radius(7), maxRange(range), damage(dmg), alive(true), bulletType(type),
+      speed(speed), maxRange(range), damage(dmg), alive(true), bulletType(type),
       velocity(dir.normalized() * speed), gravity(550.0f), enemyOwned(enemyOwnedFlag) {
+    
+    // Set radius based on bullet type
+    switch (type) {
+        case BulletType::BOSS_LARGE:
+            radius = 12;
+            break;
+        case BulletType::BOSS_MEDIUM:
+            radius = 8;
+            break;
+        case BulletType::BOSS_SMALL:
+            radius = 5;
+            break;
+        default:
+            radius = 7;
+            break;
+    }
 }
 
 void Bullet::update(float deltaTime) {
@@ -31,9 +47,22 @@ void Bullet::update(float deltaTime) {
 void Bullet::render(SDL_Renderer* renderer) {
     if (!alive) return;
     
-    // Color based on ownership: red for enemies, yellow for player
+    // Color based on bullet type and ownership
     if (enemyOwned) {
-        SDL_SetRenderDrawColor(renderer, 255, 50, 50, 255); // Red for enemy bullets
+        switch (bulletType) {
+            case BulletType::BOSS_LARGE:
+                SDL_SetRenderDrawColor(renderer, 200, 0, 200, 255); // Purple for large boss bullets
+                break;
+            case BulletType::BOSS_MEDIUM:
+                SDL_SetRenderDrawColor(renderer, 255, 100, 0, 255); // Orange for medium boss bullets
+                break;
+            case BulletType::BOSS_SMALL:
+                SDL_SetRenderDrawColor(renderer, 0, 200, 255, 255); // Cyan for small boss bullets
+                break;
+            default:
+                SDL_SetRenderDrawColor(renderer, 255, 50, 50, 255); // Red for regular enemy bullets
+                break;
+        }
     } else {
         SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255); // Yellow for player bullets
     }

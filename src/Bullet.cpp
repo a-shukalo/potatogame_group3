@@ -16,6 +16,14 @@ Bullet::Bullet(Vector2 pos, Vector2 dir, int dmg, float range, float speed, Bull
         case BulletType::BOSS_SMALL:
             radius = 5;
             break;
+        case BulletType::SNAKE_HEAD:
+            radius = 10;
+            break;
+        case BulletType::SNAKE_BODY1:
+        case BulletType::SNAKE_BODY2:
+        case BulletType::SNAKE_BODY3:
+            radius = 7;
+            break;
         default:
             radius = 7;
             break;
@@ -58,6 +66,18 @@ void Bullet::render(SDL_Renderer* renderer) {
                 break;
             case BulletType::BOSS_SMALL:
                 SDL_SetRenderDrawColor(renderer, 0, 200, 255, 255); // Cyan for small boss bullets
+                break;
+            case BulletType::SNAKE_HEAD:
+                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Red for snake head bullets
+                break;
+            case BulletType::SNAKE_BODY1:
+                SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); // Green for snake body 1 bullets
+                break;
+            case BulletType::SNAKE_BODY2:
+                SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255); // Blue for snake body 2 bullets
+                break;
+            case BulletType::SNAKE_BODY3:
+                SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255); // Yellow for snake body 3 bullets
                 break;
             default:
                 SDL_SetRenderDrawColor(renderer, 255, 50, 50, 255); // Red for regular enemy bullets

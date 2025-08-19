@@ -16,6 +16,7 @@ set(SOURCES
     src/SlimeEnemy.cpp
     src/PebblinEnemy.cpp
     src/BossEnemy.cpp
+    src/SnakeBoss.cpp
     src/Bullet.cpp
     src/Vector2.cpp
     src/ExperienceOrb.cpp
@@ -32,6 +33,7 @@ set(HEADERS
     src/SlimeEnemy.h
     src/PebblinEnemy.h
     src/BossEnemy.h
+    src/SnakeBoss.h
     src/Bullet.h
     src/Vector2.h
     src/ExperienceOrb.h

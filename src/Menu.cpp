@@ -220,7 +220,7 @@ void Menu::render(SDL_Renderer* renderer, int windowWidth, int windowHeight) {
         // Draw highlight background for selected item
         if (selected) {
             SDL_SetRenderDrawColor(renderer, 50, 50, 50, 100);
-            SDL_Rect highlightRect = {centerX - menuItemWidth/2, yPos - menuItemHeight/2, menuItemWidth, menuItemHeight};
+            SDL_Rect highlightRect = {centerX - menuItemWidth/2, yPos - 5, menuItemWidth, menuItemHeight};
             SDL_RenderFillRect(renderer, &highlightRect);
             
             // Draw border around selected item
@@ -244,7 +244,7 @@ void Menu::render(SDL_Renderer* renderer, int windowWidth, int windowHeight) {
         // Draw highlight background for selected item
         if (selected) {
             SDL_SetRenderDrawColor(renderer, 50, 50, 50, 100);
-            SDL_Rect highlightRect = {centerX - menuItemWidth/2, yPos - menuItemHeight/2, menuItemWidth, menuItemHeight};
+            SDL_Rect highlightRect = {centerX - menuItemWidth/2, yPos - 5, menuItemWidth, menuItemHeight};
             SDL_RenderFillRect(renderer, &highlightRect);
             
             // Draw border around selected item
@@ -268,7 +268,7 @@ void Menu::render(SDL_Renderer* renderer, int windowWidth, int windowHeight) {
         // Draw highlight background for selected item
         if (selected) {
             SDL_SetRenderDrawColor(renderer, 50, 50, 50, 100);
-            SDL_Rect highlightRect = {centerX - menuItemWidth/2, yPos - menuItemHeight/2, menuItemWidth, menuItemHeight};
+            SDL_Rect highlightRect = {centerX - menuItemWidth/2, yPos - 5, menuItemWidth, menuItemHeight};
             SDL_RenderFillRect(renderer, &highlightRect);
             
             // Draw border around selected item

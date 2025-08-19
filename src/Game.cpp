@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "SlimeEnemy.h"
 #include "PebblinEnemy.h"
+#include "BossEnemy.h"
 #include <cmath>
 #include <iostream>
 #include <random>
@@ -15,7 +16,7 @@
 Game::Game() : window(nullptr), renderer(nullptr), running(false), 
                gameState(GameState::MENU), timeSinceLastSpawn(0), score(0), wave(1), mousePos(0, 0),
                waveTimer(0), waveDuration(20.0f), waveActive(true), materialBag(0),
-               escCooldownTimer(0.0f), defaultFont(nullptr) {
+               escCooldownTimer(0.0f), defaultFont(nullptr), bossSpawnedThisWave(false) {
 }
 
 Game::~Game() {
@@ -96,6 +97,9 @@ bool Game::init() {
     }
     
     running = true;
+    
+    // Initialize boss wave configuration
+    initializeBossWaves();
     
     return true;
 }
@@ -222,8 +226,24 @@ void Game::update(float deltaTime) {
     // Update wave timer
     if (waveActive) {
         waveTimer += deltaTime;
+        
+        // Check for wave completion conditions
+        bool waveCompleted = false;
+        std::string completionReason = "";
+        
         if (waveTimer >= waveDuration) {
-            // Wave completed - distribute bagged materials
+            waveCompleted = true;
+            completionReason = "Timer expired";
+        } else if (isBossDefeated()) {
+            waveCompleted = true;
+            completionReason = "Boss defeated";
+        }
+        
+        if (waveCompleted) {
+            // Wave completed - clear remaining enemies and items
+            clearWaveEntities();
+            
+            // Distribute bagged materials
             if (materialBag > 0) {
                 player->gainMaterials(materialBag);
                 std::cout << "Collected " << materialBag << " materials from bag!" << std::endl;
@@ -236,6 +256,11 @@ void Game::update(float deltaTime) {
             // Prepare for next wave
             wave++;
             waveTimer = 0;
+            
+            // Reset boss flag for new wave
+            bossSpawnedThisWave = false;
+            
+            std::cout << "Wave " << (wave-1) << " completed! Reason: " << completionReason << std::endl;
             std::cout << "Wave " << wave << " will start after shop" << std::endl;
             
             // Increase wave duration by 5 seconds each wave, capped at 60 seconds
@@ -288,18 +313,20 @@ void Game::update(float deltaTime) {
                 static std::random_device rd;
                 static std::mt19937 gen(rd());
                 std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+                int baseValue = enemy->isBoss() ? 30 : 1;
                 
                 if (dist(gen) < dropChance) {
                     // Check material limit on map
                     if (materials.size() < MAX_MATERIALS_ON_MAP) {
-                        int matValue = 1 + (wave / 3);
-                        int expValue = 1 + (wave / 5);
+                        int matValue = baseValue + (wave / 3);
+                        int expValue = baseValue + (wave / 5);
                         materials.push_back(std::make_unique<Material>(
                             enemy->getPosition(), matValue, expValue
                         ));
                     } else {
                         // Add to bag if map is full
-                        materialBag += 1 + (wave / 3);
+                        materialBag += baseValue + (wave / 3);
                     }
                 }
                 
@@ -680,6 +707,19 @@ void Game::renderTTFText(const char* text, int x, int y, SDL_Color color, int fo
 }
 
 void Game::spawnEnemies() {
+    // If boss is already spawned/planned for this wave, don't spawn regular enemies
+    if (bossSpawnedThisWave) {
+        return;
+    }
+
+    // Check for boss spawn
+    if (shouldSpawnBoss()) {
+        Vector2 bossPos = getBossSpawnPosition();
+        spawnIndicators.emplace_back(bossPos, spawnTelegraphSeconds, EnemySpawnType::BOSS);
+        bossSpawnedThisWave = true;
+        return; // Don't spawn regular enemies on boss wave
+    }
+    
     timeSinceLastSpawn += 0.016f;
     
     float spawnRate = 1.0f - (wave * 0.1f);
@@ -737,6 +777,9 @@ void Game::updateSpawnIndicators(float deltaTime) {
                 case EnemySpawnType::PEBBLIN:
                     enemies.push_back(CreatePebblinEnemy(indicator.position, renderer));
                     break;
+                case EnemySpawnType::BOSS:
+                    enemies.push_back(CreateBossEnemy(indicator.position, renderer, wave));
+                    break;
                 case EnemySpawnType::BASE:
                 default:
                     enemies.push_back(std::make_unique<Enemy>(indicator.position, renderer));
@@ -785,8 +828,13 @@ void Game::checkCollisions() {
                 float distance = bullet->getPosition().distance(enemy->getPosition());
                 if (distance < bullet->getRadius() + enemy->getRadius()) {
                     bullet->destroy();
-                    enemy->hit();
-                    enemy->destroy();
+                    bool wasAlive = enemy->isAlive();
+                    enemy->takeDamage(bullet->getDamage());
+                    
+                    // Create experience orb if enemy died from this shot
+                    if (wasAlive && !enemy->isAlive()) {
+                        experienceOrbs.push_back(std::make_unique<ExperienceOrb>(enemy->getPosition()));
+                    }
                 }
             }
         }
@@ -833,19 +881,22 @@ void Game::checkMeleeAttacks() {
                 if (enemy->isAlive()) {
                     float distance = weaponTip.distance(enemy->getPosition());
                     if (distance <= damageRadius + enemy->getRadius()) {
-                        enemy->hit();
-                        enemy->destroy();
+                        bool wasAlive = enemy->isAlive();
+                        enemy->takeDamage(meleeDamage);
                         
-                        // Create experience orb at enemy position
-                        experienceOrbs.push_back(std::make_unique<ExperienceOrb>(enemy->getPosition()));
-                        
-                        // Chance to drop materials
-                        static std::random_device matRd;
-                        static std::mt19937 matGen(matRd());
-                        std::uniform_real_distribution<float> matChance(0.0f, 1.0f);
-                        
-                        if (matChance(matGen) < getMaterialDropChance()) {
-                            materials.push_back(std::make_unique<Material>(enemy->getPosition()));
+                        // Only drop rewards if enemy died from this attack
+                        if (wasAlive && !enemy->isAlive()) {
+                            // Create experience orb at enemy position
+                            experienceOrbs.push_back(std::make_unique<ExperienceOrb>(enemy->getPosition()));
+                            
+                            // Chance to drop materials
+                            static std::random_device matRd;
+                            static std::mt19937 matGen(matRd());
+                            std::uniform_real_distribution<float> matChance(0.0f, 1.0f);
+                            
+                            if (matChance(matGen) < getMaterialDropChance()) {
+                                materials.push_back(std::make_unique<Material>(enemy->getPosition()));
+                            }
                         }
                     }
                 }
@@ -908,8 +959,115 @@ void Game::resetGameState() {
     waveActive = true;
     materialBag = 0;
     
+    // Reset boss system
+    bossSpawnedThisWave = false;
+    
     // Reset shop state
     shop->closeShop();
     
     std::cout << "Game reset - starting new game" << std::endl;
+}
+
+void Game::initializeBossWaves() {
+    bossWaves[2] = true;   // First boss on wave 2
+    bossWaves[4] = true;  // Second boss on wave 4
+    bossWaves[7] = true;  // Third boss on wave 7
+    bossWaves[10] = true;  // Fourth boss on wave 10
+    // Can be extended as needed
+}
+
+bool Game::shouldSpawnBoss() const {
+    auto it = bossWaves.find(wave);
+    return (it != bossWaves.end()) && it->second && !bossSpawnedThisWave;
+}
+
+Vector2 Game::getBossSpawnPosition() const {
+    // Spawn boss in random corner of screen
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> corner(0, 3);
+    
+    int margin = 100;
+    switch (corner(gen)) {
+        case 0: return Vector2(margin, margin); // Top left
+        case 1: return Vector2(WINDOW_WIDTH - margin, margin); // Top right
+        case 2: return Vector2(WINDOW_WIDTH - margin, WINDOW_HEIGHT - margin); // Bottom right
+        default: return Vector2(margin, WINDOW_HEIGHT - margin); // Bottom left
+    }
+}
+
+bool Game::isBossDefeated() const {
+    // Boss is defeated if:
+    // 1. Boss was spawned this wave AND
+    // 2. Boss is not in spawn indicators (not waiting to spawn) AND
+    // 3. No boss enemies are alive
+    if (!bossSpawnedThisWave) {
+        return false; // No boss spawned, so can't be defeated
+    }
+    
+    // Check if boss is still waiting to spawn (in spawn indicators)
+    for (const auto& indicator : spawnIndicators) {
+        if (indicator.enemyType == EnemySpawnType::BOSS) {
+            return false; // Boss is still waiting to spawn, can't be defeated yet
+        }
+    }
+    
+    // Check if any boss enemy is still alive
+    for (const auto& enemy : enemies) {
+        // Check if this enemy is a boss (we can cast to check type)
+        if (dynamic_cast<BossEnemy*>(enemy.get()) != nullptr) {
+            if (enemy->isAlive()) {
+                return false; // Boss is still alive
+            }
+        }
+    }
+    
+    // Boss was spawned, not in indicators, and no living boss found = boss defeated
+    return true;
+}
+
+void Game::clearWaveEntities() {
+    int clearedEnemies = 0;
+    int clearedExperience = 0;
+    int collectedMaterials = 0;
+    
+    // Count and clear all enemies (no rewards for unkilled enemies)
+    for (auto& enemy : enemies) {
+        if (enemy->isAlive()) {
+            clearedEnemies++;
+        }
+    }
+    enemies.clear();
+    
+    // Clear all experience orbs and add their value to material bag
+    for (auto& orb : experienceOrbs) {
+        if (orb->isAlive()) {
+            clearedExperience++;
+            // Convert experience orbs to materials (1:1 ratio for simplicity)
+            materialBag += 1;
+            collectedMaterials += 1;
+        }
+    }
+    experienceOrbs.clear();
+    
+    // Clear all materials and add their value to material bag
+    for (auto& material : materials) {
+        if (material->isAlive()) {
+            materialBag += material->getMaterialValue();
+            collectedMaterials += material->getMaterialValue();
+        }
+    }
+    materials.clear();
+    
+    // Clear any remaining bullets
+    bullets.clear();
+    
+    // Clear spawn indicators
+    spawnIndicators.clear();
+    
+    if (clearedEnemies > 0 || clearedExperience > 0 || collectedMaterials > 0) {
+        std::cout << "Wave completed! Cleared from map - Enemies: " << clearedEnemies 
+                  << ", Experience orbs: " << clearedExperience 
+                  << ", Materials collected: " << collectedMaterials << std::endl;
+    }
 }

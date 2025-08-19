@@ -5,7 +5,10 @@
 enum class BulletType {
     PISTOL,
     SMG,
-    ENEMY_LOB
+    ENEMY_LOB,
+    BOSS_LARGE,    // Large boss bullet
+    BOSS_MEDIUM,   // Medium boss bullet
+    BOSS_SMALL     // Small boss bullet
 };
 
 class Bullet {

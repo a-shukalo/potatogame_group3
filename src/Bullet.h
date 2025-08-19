@@ -8,7 +8,11 @@ enum class BulletType {
     ENEMY_LOB,
     BOSS_LARGE,    // Large boss bullet
     BOSS_MEDIUM,   // Medium boss bullet
-    BOSS_SMALL     // Small boss bullet
+    BOSS_SMALL,    // Small boss bullet
+    SNAKE_HEAD,    // Snake boss head bullet (red)
+    SNAKE_BODY1,   // Snake boss body segment 1 bullet (green)
+    SNAKE_BODY2,   // Snake boss body segment 2 bullet (blue)
+    SNAKE_BODY3    // Snake boss body segment 3 bullet (yellow)
 };
 
 class Bullet {

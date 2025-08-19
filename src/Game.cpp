@@ -2,6 +2,7 @@
 #include "SlimeEnemy.h"
 #include "PebblinEnemy.h"
 #include "BossEnemy.h"
+#include "SnakeBoss.h"
 #include <cmath>
 #include <iostream>
 #include <random>
@@ -778,7 +779,7 @@ void Game::updateSpawnIndicators(float deltaTime) {
                     enemies.push_back(CreatePebblinEnemy(indicator.position, renderer));
                     break;
                 case EnemySpawnType::BOSS:
-                    enemies.push_back(CreateBossEnemy(indicator.position, renderer, wave));
+                    enemies.push_back(CreateSnakeBoss(indicator.position, renderer, wave));
                     break;
                 case EnemySpawnType::BASE:
                 default:
@@ -1014,8 +1015,8 @@ bool Game::isBossDefeated() const {
     
     // Check if any boss enemy is still alive
     for (const auto& enemy : enemies) {
-        // Check if this enemy is a boss (we can cast to check type)
-        if (dynamic_cast<BossEnemy*>(enemy.get()) != nullptr) {
+        // Check if this enemy is a boss
+        if (enemy->isBoss()) {
             if (enemy->isAlive()) {
                 return false; // Boss is still alive
             }
